@@ -295,37 +295,52 @@ def main():
         print("0. 退出")
         print("-" * 50)
         
-        choice = input("请选择操作 (0-9): ").strip()
+        try:
+            choice = input("请选择操作 (0-9): ").strip()
+        except KeyboardInterrupt:
+            print("\n👋 再见！")
+            break
         
         if choice == "1":
-            account_name = input("请输入账号名称: ").strip()
-            if account_name:
-                manager.save_current_account(account_name)
-            else:
-                print("❌ 账号名称不能为空")
+            try:
+                account_name = input("请输入账号名称: ").strip()
+                if account_name:
+                    manager.save_current_account(account_name)
+                else:
+                    print("❌ 账号名称不能为空")
+            except KeyboardInterrupt:
+                print("\n⚠️ 操作取消")
+                continue
         
         elif choice == "2":
-            account_name = input("请输入账号名称: ").strip()
-            if not account_name:
-                print("❌ 账号名称不能为空")
-                continue
-            
-            print("请粘贴完整的 auth.json 配置内容 (以 {} 开始和结束):")
-            print("输入完成后按 Ctrl+D (Linux/Mac) 或 Ctrl+Z (Windows) 结束:")
-            
-            config_lines = []
             try:
-                while True:
-                    line = input()
-                    config_lines.append(line)
-            except EOFError:
-                pass
-            
-            config_text = '\n'.join(config_lines).strip()
-            if config_text:
-                manager.save_account_from_config(account_name, config_text)
-            else:
-                print("❌ 配置内容不能为空")
+                account_name = input("请输入账号名称: ").strip()
+                if not account_name:
+                    print("❌ 账号名称不能为空")
+                    continue
+                
+                print("请粘贴完整的 auth.json 配置内容 (以 {} 开始和结束):")
+                print("输入完成后按 Ctrl+D (Linux/Mac) 或 Ctrl+Z (Windows) 结束:")
+                
+                config_lines = []
+                try:
+                    while True:
+                        line = input()
+                        config_lines.append(line)
+                except EOFError:
+                    pass
+                except KeyboardInterrupt:
+                    print("\n⚠️ 操作取消")
+                    continue
+                
+                config_text = '\n'.join(config_lines).strip()
+                if config_text:
+                    manager.save_account_from_config(account_name, config_text)
+                else:
+                    print("❌ 配置内容不能为空")
+            except KeyboardInterrupt:
+                print("\n⚠️ 操作取消")
+                continue
         
         elif choice == "3":
             manager.list_accounts()
@@ -333,22 +348,34 @@ def main():
         elif choice == "4":
             accounts = manager.list_accounts()
             if accounts:
-                account_name = input("请输入要切换的账号名称: ").strip()
-                if account_name in accounts:
-                    manager.switch_account(account_name)
-                else:
-                    print("❌ 账号名称不存在")
+                try:
+                    account_name = input("请输入要切换的账号名称: ").strip()
+                    if account_name in accounts:
+                        manager.switch_account(account_name)
+                    else:
+                        print("❌ 账号名称不存在")
+                except KeyboardInterrupt:
+                    print("\n⚠️ 操作取消")
+                    continue
         
         elif choice == "5":
             accounts = manager.list_accounts()
             if accounts:
-                account_name = input("请输入要删除的账号名称: ").strip()
-                if account_name in accounts:
-                    confirm = input(f"确认删除账号 '{account_name}' 吗? (y/N): ").strip().lower()
-                    if confirm == 'y':
-                        manager.delete_account(account_name)
-                else:
-                    print("❌ 账号名称不存在")
+                try:
+                    account_name = input("请输入要删除的账号名称: ").strip()
+                    if account_name in accounts:
+                        try:
+                            confirm = input(f"确认删除账号 '{account_name}' 吗? (y/N): ").strip().lower()
+                            if confirm == 'y':
+                                manager.delete_account(account_name)
+                        except KeyboardInterrupt:
+                            print("\n⚠️ 操作取消")
+                            continue
+                    else:
+                        print("❌ 账号名称不存在")
+                except KeyboardInterrupt:
+                    print("\n⚠️ 操作取消")
+                    continue
         
         elif choice == "6":
             manager.show_current_account()
@@ -359,11 +386,15 @@ def main():
         elif choice == "8":
             accounts = manager.list_accounts()
             if accounts:
-                account_name = input("请输入要查看用量的账号名称: ").strip()
-                if account_name in accounts:
-                    manager.check_account_usage(account_name)
-                else:
-                    print("❌ 账号名称不存在")
+                try:
+                    account_name = input("请输入要查看用量的账号名称: ").strip()
+                    if account_name in accounts:
+                        manager.check_account_usage(account_name)
+                    else:
+                        print("❌ 账号名称不存在")
+                except KeyboardInterrupt:
+                    print("\n⚠️ 操作取消")
+                    continue
         
         elif choice == "9":
             manager.check_account_usage(force_refresh=True)

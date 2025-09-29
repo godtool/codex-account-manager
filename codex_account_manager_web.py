@@ -14,33 +14,21 @@ from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 from usage_checker import OpenAIUsageChecker
-from config_utils import generate_account_name, detect_project_mode
+from config_utils import generate_account_name, get_config_paths
 
 
 class CodexAccountManagerWeb:
-    def __init__(self, project_dir=None):
-        # 配置项目目录
-        if project_dir:
-            self.project_dir = Path(project_dir)
-            self.codex_dir = self.project_dir / "codex-config"
-            self.auth_file = self.codex_dir / "auth.json"
-            self.accounts_dir = self.codex_dir / "accounts"
-            # 系统原始配置目录
-            self.system_codex_dir = Path.home() / ".codex"
-            self.system_auth_file = self.system_codex_dir / "auth.json"
-            self.mode = "项目模式"
-        else:
-            # 使用系统默认配置
-            self.codex_dir = Path.home() / ".codex"
-            self.auth_file = self.codex_dir / "auth.json"
-            self.accounts_dir = self.codex_dir / "accounts"
-            self.system_codex_dir = self.codex_dir
-            self.system_auth_file = self.auth_file
-            self.mode = "系统模式"
+    def __init__(self):
+        # 使用简化的配置路径
+        config = get_config_paths()
+        self.codex_dir = config['codex_dir']
+        self.auth_file = config['auth_file']
+        self.accounts_dir = config['accounts_dir']
+        self.system_auth_file = config['system_auth_file']
         
         # 确保目录存在
-        self.codex_dir.mkdir(exist_ok=True)
-        self.accounts_dir.mkdir(exist_ok=True)
+        self.codex_dir.mkdir(parents=True, exist_ok=True)
+        self.accounts_dir.mkdir(parents=True, exist_ok=True)
     
     def extract_email_from_token(self, config):
         """从token中提取邮箱地址"""
@@ -104,9 +92,8 @@ class CodexAccountManagerWeb:
         # 获取当前账号邮箱用于标记
         current_email = None
         try:
-            self.sync_from_system()
-            if self.auth_file.exists():
-                with open(self.auth_file, 'r', encoding='utf-8') as f:
+            if self.system_auth_file.exists():
+                with open(self.system_auth_file, 'r', encoding='utf-8') as f:
                     current_config = json.load(f)
                 current_email = self.extract_email_from_token(current_config)
         except:
@@ -166,12 +153,10 @@ class CodexAccountManagerWeb:
     def quick_save_account(self):
         """快速保存当前账号"""
         try:
-            self.sync_from_system()
+            if not self.system_auth_file.exists():
+                return {"error": "系统 auth.json 文件不存在"}
             
-            if not self.auth_file.exists():
-                return {"error": "auth.json 文件不存在"}
-            
-            with open(self.auth_file, 'r', encoding='utf-8') as f:
+            with open(self.system_auth_file, 'r', encoding='utf-8') as f:
                 current_config = json.load(f)
             
             email = self.extract_email_from_token(current_config)
@@ -195,19 +180,11 @@ class CodexAccountManagerWeb:
 
     def switch_account(self, account_name):
         """切换到指定账号"""
-        # 在切换前保存当前账号的用量数据
-        self.save_current_usage_before_switch()
-        
         try:
             account_file = self.accounts_dir / f"{account_name}.json"
             
             if not account_file.exists():
                 return {"error": f"账号配置不存在: {account_name}"}
-            
-            # 备份当前配置
-            if self.auth_file.exists():
-                backup_file = self.auth_file.with_suffix('.json.backup')
-                shutil.copy2(self.auth_file, backup_file)
             
             # 读取目标账号配置
             with open(account_file, 'r', encoding='utf-8') as f:
@@ -220,71 +197,27 @@ class CodexAccountManagerWeb:
                 "last_refresh": target_config.get("last_refresh")
             }
             
-            # 写入项目配置
-            with open(self.auth_file, 'w', encoding='utf-8') as f:
+            # 直接写入系统 Codex 配置
+            self.system_auth_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.system_auth_file, 'w', encoding='utf-8') as f:
                 json.dump(clean_config, f, indent=2, ensure_ascii=False)
-            
-            # 同步到系统配置
-            self.sync_to_system()
             
             return {"success": f"成功切换到账号: {account_name}"}
             
         except Exception as e:
             return {"error": f"切换失败: {e}"}
 
-    def save_current_usage_before_switch(self):
-        """在切换账号前保存当前账号的用量（不查询session，只从缓存读取）"""
-        try:
-            # 先同步系统配置
-            self.sync_from_system()
-            
-            if not self.auth_file.exists():
-                return
-            
-            with open(self.auth_file, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-            
-            # 提取邮箱
-            email = self.extract_email_from_token(config)
-            if not email:
-                return
-            
-            # 不进行任何session查询，只是为了保持代码结构
-            # 实际的用量数据保存现在只通过refresh_current_usage方法进行
-            
-        except Exception:
-            pass  # 静默处理错误，不影响切换流程
-
     def delete_account(self, account_name):
-        """删除指定账号"""
+        """删除账号配置"""
         try:
             account_file = self.accounts_dir / f"{account_name}.json"
-            account_file.unlink()
-            return {"success": f"已删除账号配置: {account_name}"}
-            
+            if account_file.exists():
+                account_file.unlink()
+                return {"success": f"成功删除账号: {account_name}"}
+            else:
+                return {"error": f"账号不存在: {account_name}"}
         except Exception as e:
             return {"error": f"删除失败: {e}"}
-
-    def sync_from_system(self):
-        """从系统配置同步"""
-        if self.system_auth_file.exists() and self.system_auth_file != self.auth_file:
-            try:
-                shutil.copy2(self.system_auth_file, self.auth_file)
-                return True
-            except Exception:
-                return False
-        return True
-
-    def sync_to_system(self):
-        """同步到系统配置"""
-        if self.auth_file.exists() and self.auth_file != self.system_auth_file:
-            try:
-                self.system_codex_dir.mkdir(exist_ok=True)
-                shutil.copy2(self.auth_file, self.system_auth_file)
-                return True
-            except Exception:
-                return False
-        return True
 
     def check_account_usage(self, account_name=None):
         """检查账号用量"""
@@ -292,9 +225,8 @@ class CodexAccountManagerWeb:
             # 获取当前账号邮箱
             current_email = None
             try:
-                self.sync_from_system()
-                if self.auth_file.exists():
-                    with open(self.auth_file, 'r', encoding='utf-8') as f:
+                if self.system_auth_file.exists():
+                    with open(self.system_auth_file, 'r', encoding='utf-8') as f:
                         current_config = json.load(f)
                     current_email = self.extract_email_from_token(current_config)
             except:
@@ -381,14 +313,11 @@ class CodexAccountManagerWeb:
     def refresh_current_usage(self):
         """手动刷新当前账号的用量（从session读取并更新缓存）"""
         try:
-            # 先同步系统配置
-            self.sync_from_system()
-            
-            if not self.auth_file.exists():
+            if not self.system_auth_file.exists():
                 return {"error": "未找到当前账号配置"}
             
             # 获取当前账号邮箱
-            with open(self.auth_file, 'r', encoding='utf-8') as f:
+            with open(self.system_auth_file, 'r', encoding='utf-8') as f:
                 current_config = json.load(f)
             
             email = self.extract_email_from_token(current_config)
@@ -1549,17 +1478,13 @@ def create_handler(manager):
 
 
 def main():
-    project_dir = detect_project_mode()
-    manager = CodexAccountManagerWeb(project_dir)
+    manager = CodexAccountManagerWeb()
     
     port = 8890
     server = HTTPServer(('localhost', port), create_handler(manager))
     
     print(f"OpenAI Codex 账号管理器已启动")
-    if project_dir:
-        print(f"项目模式: {project_dir}")
-    else:
-        print("系统模式")
+    print(f"配置存储: {Path(__file__).parent / 'codex-config'}")
     print(f"请在浏览器中访问: http://localhost:{port}")
     print("按 Ctrl+C 退出")
     

@@ -4,6 +4,7 @@ Codex CLI 用量查询模块 - 简化版本
 """
 
 import json
+import os
 import glob
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -29,6 +30,13 @@ class CodexUsageChecker:
                 self.usage_cache_dir = Path.home() / ".codex" / "usage_cache"
         
         self.usage_cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 缓存有效期（小时），默认30天，可通过环境变量覆盖
+        # 例如：export CODEX_USAGE_CACHE_TTL_HOURS=168  # 7天
+        try:
+            self.cache_ttl_hours = int(os.getenv("CODEX_USAGE_CACHE_TTL_HOURS", "720"))
+        except ValueError:
+            self.cache_ttl_hours = 720
     
     def find_latest_session_file(self) -> Optional[Path]:
         """查找最新的有用量数据的 session 文件"""
@@ -117,7 +125,8 @@ class CodexUsageChecker:
         
         try:
             safe_email = email.replace('@', '_at_').replace('.', '_').replace('+', '_plus_')
-            cache_file = self.usage_cache_dir / f"{safe_email}_usage.json"
+            cache_filename = f"{safe_email}_usage.json"
+            cache_file = self.usage_cache_dir / cache_filename
             
             if not cache_file.exists():
                 return None
@@ -125,9 +134,9 @@ class CodexUsageChecker:
             with open(cache_file, 'r', encoding='utf-8') as f:
                 cache_data = json.load(f)
             
-            # 检查数据是否过期（超过24小时）
+            # 检查数据是否过期（超过配置的TTL，默认30天）
             last_updated = datetime.fromisoformat(cache_data.get('last_updated', ''))
-            if datetime.now() - last_updated > timedelta(hours=24):
+            if datetime.now() - last_updated > timedelta(hours=self.cache_ttl_hours):
                 return None
             
             return cache_data.get('usage_data')
@@ -222,10 +231,17 @@ class CodexUsageChecker:
                     reset_time = datetime.now() + timedelta(seconds=resets_in_seconds)
                     window_type = "5小时窗口" if window_minutes <= 330 else "周限制"
                     
+                    # 格式化重置时间 - 如果是今天就只显示时间，否则显示日期+时间
+                    now = datetime.now()
+                    if reset_time.date() == now.date():
+                        reset_str = reset_time.strftime('%H:%M')
+                    else:
+                        reset_str = reset_time.strftime('%m/%d %H:%M')
+                    
                     lines.extend([
                         f"  🔄 {window_type}:",
                         f"    已使用: {used_percent:.1f}%",
-                        f"    重置时间: {reset_time.strftime('%H:%M:%S')}"
+                        f"    重置时间: {reset_str}"
                     ])
         
         return "\n".join(lines)

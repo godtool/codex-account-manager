@@ -28,7 +28,8 @@ jobs:
       run:
         working-directory: codex-tauri-app
     env:
-      TAURI_CONFIG: src-tauri/tauri.conf.json
+      TAURI_CONFIG: ${{ github.workspace }}/codex-tauri-app/src-tauri/tauri.conf.json
+      RUST_BACKTRACE: 1
     strategy:
       fail-fast: false
       matrix:
@@ -58,7 +59,7 @@ jobs:
 
       - name: Install frontend dependencies
         run: |
-          npm ci
+          npm install
 
       - name: Debug project layout
         run: |
@@ -69,7 +70,7 @@ jobs:
       - name: Build Tauri app via CLI (explicit config)
         run: |
           npm exec tauri -- --version
-          npm exec tauri -- build --config src-tauri/tauri.conf.json --ci
+          npm exec tauri -- build --ci
 
       - name: Upload artifacts to GitHub Release
         uses: softprops/action-gh-release@v1

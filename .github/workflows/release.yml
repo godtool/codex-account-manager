@@ -24,6 +24,11 @@ jobs:
 
   build-tauri:
     needs: create-release
+    defaults:
+      run:
+        working-directory: codex-tauri-app
+    env:
+      TAURI_CONFIG: src-tauri/tauri.conf.json
     strategy:
       fail-fast: false
       matrix:
@@ -47,15 +52,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
+      - name: Install NSIS (Windows only)
+        if: matrix.platform == 'windows-latest'
+        run: choco install nsis -y
+
       - name: Install frontend dependencies
         run: |
-          cd codex-tauri-app
-          npm install
+          npm ci
 
-      - name: Build Tauri app via CLI
+      - name: Debug project layout
         run: |
-          cd codex-tauri-app
-          npm run tauri build
+          pwd
+          ls -la
+          ls -la src-tauri || true
+
+      - name: Build Tauri app via CLI (explicit config)
+        run: |
+          npm exec tauri -- --version
+          npm exec tauri -- build --config src-tauri/tauri.conf.json --ci
 
       - name: Upload artifacts to GitHub Release
         uses: softprops/action-gh-release@v1

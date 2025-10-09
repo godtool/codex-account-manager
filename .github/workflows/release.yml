@@ -57,6 +57,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: codex-tauri-app
+          tauriScriptName: tauri
+          args: build
           tagName: ${{ github.ref_name }}
           releaseName: 'Codex Account Manager ${{ github.ref_name }}'
           releaseBody: 'See the CHANGELOG.md for details.'

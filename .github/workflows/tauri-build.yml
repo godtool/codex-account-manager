@@ -40,6 +40,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         with:
           projectPath: codex-tauri-app
+          tauriScriptName: tauri
+          args: build
           releaseDraft: false
 
       - name: Upload artifacts

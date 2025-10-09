@@ -52,15 +52,18 @@ jobs:
           cd codex-tauri-app
           npm install
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Build Tauri app via CLI
+        run: |
+          cd codex-tauri-app
+          npm run tauri build
+
+      - name: Upload artifacts to GitHub Release
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          projectPath: codex-tauri-app
-          tauriScriptName: tauri
-          args: build
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Codex Account Manager ${{ github.ref_name }}'
-          releaseBody: 'See the CHANGELOG.md for details.'
-          releaseDraft: true
+          tag_name: ${{ github.ref_name }}
+          files: |
+            codex-tauri-app/src-tauri/target/release/bundle/**
+          draft: true
           prerelease: false

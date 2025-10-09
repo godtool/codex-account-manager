@@ -16,6 +16,7 @@ jobs:
         working-directory: codex-tauri-app
     env:
       TAURI_CONFIG: src-tauri/tauri.conf.json
+      RUST_BACKTRACE: 1
     strategy:
       fail-fast: false
       matrix:
@@ -45,7 +46,7 @@ jobs:
 
       - name: Install frontend dependencies
         run: |
-          npm ci
+          npm install
 
       - name: Debug project layout
         run: |

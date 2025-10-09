@@ -17,6 +17,10 @@ codex-account-manager/
 ├── backup_current_account.py    # 备份当前账号配置脚本（智能提取邮箱）
 ├── usage_checker.py             # 用量查询模块
 ├── check_usage.py               # 独立的用量查询工具
+├── codex-tauri-app/            # Tauri 桌面应用（跨平台）
+│   ├── src/                    # 前端源码
+│   ├── src-tauri/              # Rust 后端
+│   └── README.md               # Tauri 应用说明
 └── codex-config/               # 账号配置存储目录
     ├── auth.json               # 当前活跃账号配置
     ├── auth.json.backup        # 自动备份文件
@@ -29,25 +33,52 @@ codex-account-manager/
 ## 🚀 快速开始
 
 ### 环境要求
-- Python 3.6 或更高版本
+- Python 3.6 或更高版本（Python 脚本方式）
+- 或者使用 Tauri 桌面应用（无需 Python）
 - 已安装 Claude Code（Codex CLI）
 
 ### 安装使用
 
-#### 1. 克隆项目
+#### 方式一：使用 Tauri 桌面应用（推荐）
+
+**下载安装包**
+```bash
+# 从 Releases 页面下载对应平台的安装包
+# macOS: .dmg 或 .app
+# Windows: .msi 或 .exe
+# Linux: .deb 或 .AppImage
+```
+
+**或从源码构建**
+```bash
+cd codex-tauri-app
+npm install
+npm run build
+```
+
+**功能特性**
+- ✅ 图形化界面操作
+- ✅ 支持所有账号管理功能
+- ✅ 跨平台支持（macOS、Windows、Linux）
+- ✅ 30天用量缓存
+- ✅ 无需 Python 环境
+
+#### 方式二：使用 Python 脚本
+
+**1. 克隆项目**
 ```bash
 git clone https://github.com/your-username/codex-account-manager.git
 cd codex-account-manager
 ```
 
-#### 2. 使用Web GUI界面（推荐）
+**2. 使用Web GUI界面**
 ```bash
 # 启动Web界面管理器
 python3 codex_account_manager_web.py
 ```
 浏览器会自动打开 http://localhost:8888，您可以通过可视化界面管理账号。
 
-#### 3. 备份当前账号
+**3. 备份当前账号**
 ```bash
 # 自动备份当前账号（智能提取邮箱作为名称）
 python3 backup_current_account.py
@@ -56,22 +87,22 @@ python3 backup_current_account.py
 python3 backup_current_account.py work_account
 ```
 
-#### 4. 查看可用账号
+**4. 查看可用账号**
 ```bash
 python3 switch_account.py
 ```
 
-#### 5. 切换账号
+**5. 切换账号**
 ```bash
 python3 switch_account.py work_account
 ```
 
-#### 6. 使用完整管理界面（命令行）
+**6. 使用完整管理界面（命令行）**
 ```bash
 python3 codex_account_manager.py
 ```
 
-#### 7. 查看账号用量
+**7. 查看账号用量**
 ```bash
 # 查看当前账号用量
 python3 check_usage.py

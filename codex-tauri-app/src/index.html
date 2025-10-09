@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex 账号管理器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Codex 账号管理器</h1>
+        <p>智能管理与切换多个 OpenAI 账号配置</p>
+    </div>
+
+    <div class="container">
+        <div class="main-grid">
+            <div class="card accounts-container">
+                <div class="card-header">账号列表</div>
+                <div class="card-body">
+                    <div class="toolbar">
+                        <button class="btn btn-success" id="quick-save-btn" onclick="quickSave()">
+                            快速备份当前账号
+                        </button>
+                        <button class="btn btn-secondary" onclick="refreshData()">
+                            刷新页面
+                        </button>
+                    </div>
+                    <div class="alert" style="background: #f0f9ff; border-color: #0ea5e9; color: #0c4a6e; margin-bottom: 20px;">
+                        只能刷新当前账号的用量数据。刷新数据前请先用 codex 发送消息后点击「刷新用量」按钮。
+                    </div>
+                    <div id="accounts-list" class="accounts-grid">
+                        <div class="empty-state">
+                            <div class="loading-spinner"></div>
+                            <div style="margin-top: 12px;">正在加载账号列表...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-actions">
+                <div class="card">
+                    <div class="card-header">快速操作</div>
+                    <div class="card-body">
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <button class="btn btn-warning" onclick="switchAccount()" id="switch-btn">
+                                切换账号
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteAccount()" id="delete-btn">
+                                删除账号
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-light);">
+                            先选择一个账号来执行操作
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="collapsible" id="add-config-section">
+                    <div class="collapsible-header" onclick="toggleCollapsible('add-config-section')">
+                        <span>添加配置文件</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="input-group">
+                            <label>账号名称:</label>
+                            <input type="text" id="config-name" placeholder="输入账号名称">
+                        </div>
+                        <div class="input-group">
+                            <label>配置内容:</label>
+                            <textarea id="config-content" rows="6" placeholder="粘贴完整的 auth.json 配置内容"></textarea>
+                        </div>
+                        <button class="btn btn-success" onclick="addConfig()" style="width: 100%;">
+                            保存配置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="message-area"></div>
+
+    <script type="module" src="/main.js"></script>
+</body>
+</html>

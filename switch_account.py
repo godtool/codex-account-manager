@@ -24,7 +24,11 @@ def sync_to_system(auth_file, system_auth_file):
 
 def switch_account(account_name):
     """切换到指定账号"""
-    codex_dir, auth_file, accounts_dir, system_auth_file = get_config_paths()
+    paths = get_config_paths()
+    codex_dir = paths['codex_dir']
+    auth_file = paths['auth_file']
+    accounts_dir = paths['accounts_dir']
+    system_auth_file = paths['system_auth_file']
     account_file = accounts_dir / f"{account_name}.json"
     
     if not account_file.exists():
@@ -75,7 +79,7 @@ def switch_account(account_name):
 
 def list_accounts():
     """列出所有可用账号"""
-    _, _, accounts_dir, _ = get_config_paths()
+    accounts_dir = get_config_paths()['accounts_dir']
     account_files = list(accounts_dir.glob("*.json"))
     
     if not account_files:

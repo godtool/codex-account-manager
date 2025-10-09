@@ -13,7 +13,11 @@ from config_utils import get_config_paths, generate_account_name
 
 def backup_current_account(account_name=None):
     """备份当前账号配置"""
-    codex_dir, auth_file, accounts_dir, system_auth_file = get_config_paths()
+    paths = get_config_paths()
+    codex_dir = paths['codex_dir']
+    auth_file = paths['auth_file']
+    accounts_dir = paths['accounts_dir']
+    system_auth_file = paths['system_auth_file']
     
     # 确保目录存在
     accounts_dir.mkdir(parents=True, exist_ok=True)

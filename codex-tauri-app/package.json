@@ -1,0 +1,29 @@
+{
+  "name": "codex-account-manager",
+  "version": "0.1.0",
+  "description": "Codex 账号管理器 - Tauri 桌面应用",
+  "main": "index.js",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "vite": "vite"
+  },
+  "keywords": [
+    "codex",
+    "account-manager",
+    "tauri"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "vite": "^7.1.9"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-fs": "^2.0.0"
+  }
+}

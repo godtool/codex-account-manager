@@ -9,6 +9,7 @@ import argparse
 from pathlib import Path
 from datetime import datetime, timedelta
 from usage_checker import OpenAIUsageChecker, extract_access_token_from_auth, extract_email_from_auth
+from config_utils import get_config_paths
 import json
 
 
@@ -25,9 +26,10 @@ def load_auth_config(config_path=None):
             print(f"❌ 读取配置文件失败: {e}")
             return None
     
-    # 自动查找配置文件
+    # 自动查找配置文件（优先使用与 Tauri 一致的 appConfigDir/codex-config/auth.json）
+    paths = get_config_paths()
     possible_paths = [
-        "codex-config/auth.json",
+        paths['auth_file'],
         Path.home() / ".codex/auth.json",
         Path.home() / ".config/cursor/auth.json",
         Path.home() / ".cursor/auth.json"
@@ -57,7 +59,7 @@ def check_usage(config_path=None, account_name=None, show_details=False):
     
     if account_name:
         # 检查指定账号
-        accounts_dir = Path("codex-config/accounts") if Path("codex-config").exists() else Path.home() / ".codex/accounts"
+        accounts_dir = get_config_paths()['accounts_dir']
         account_file = accounts_dir / f"{account_name}.json"
         
         if not account_file.exists():
@@ -178,7 +180,7 @@ def check_usage(config_path=None, account_name=None, show_details=False):
 
 def list_all_accounts():
     """列出所有账号的用量"""
-    accounts_dir = Path("codex-config/accounts") if Path("codex-config").exists() else Path.home() / ".codex/accounts"
+    accounts_dir = get_config_paths()['accounts_dir']
     
     if not accounts_dir.exists():
         print("❌ 账号配置目录不存在")

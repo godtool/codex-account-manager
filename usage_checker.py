@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Codex CLI 用量查询模块 - 简化版本
+Codex CLI 用量查询模块
 """
 
 import json
@@ -9,6 +9,7 @@ import glob
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Optional
+from config_utils import get_config_paths
 
 
 class CodexUsageChecker:
@@ -22,12 +23,8 @@ class CodexUsageChecker:
         if usage_cache_dir:
             self.usage_cache_dir = Path(usage_cache_dir)
         else:
-            current_dir = Path.cwd()
-            if "codex-account-manager" in str(current_dir):
-                project_dir = current_dir if current_dir.name == "codex-account-manager" else current_dir / "codex-account-manager"
-                self.usage_cache_dir = project_dir / "codex-config" / "usage_cache"
-            else:
-                self.usage_cache_dir = Path.home() / ".codex" / "usage_cache"
+            # 与 Tauri 端一致：appConfigDir()/codex-config/usage_cache
+            self.usage_cache_dir = get_config_paths()['usage_cache_dir']
         
         self.usage_cache_dir.mkdir(parents=True, exist_ok=True)
         

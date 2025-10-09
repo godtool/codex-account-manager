@@ -1,0 +1,462 @@
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+:root {
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text: #1e293b;
+    --text-light: #475569;
+    --border: #e2e8f0;
+    --border-hover: #cbd5e1;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 4px 25px rgba(0, 0, 0, 0.1);
+    --radius: 12px;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --success: #10b981;
+    --success-hover: #059669;
+    --warning: #f59e0b;
+    --warning-hover: #d97706;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --soft: #f1f5f9;
+}
+
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; 
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.header { 
+    background: var(--card-bg);
+    padding: 32px 24px; 
+    text-align: center; 
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--primary), var(--success));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header p {
+    color: var(--text-light);
+    font-size: 16px;
+}
+
+.container { 
+    max-width: 1400px; 
+    margin: 0 auto; 
+    padding: 24px; 
+}
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+    align-items: start;
+}
+
+.card { 
+    background: var(--card-bg); 
+    border-radius: var(--radius); 
+    box-shadow: var(--shadow); 
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.card-header { 
+    background: var(--soft);
+    padding: 20px 24px; 
+    font-weight: 600; 
+    font-size: 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-body { 
+    padding: 24px; 
+}
+
+.accounts-container {
+    min-height: 400px;
+}
+
+.toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.accounts-grid { 
+    display: grid; 
+    gap: 16px; 
+}
+
+.account-card { 
+    padding: 20px; 
+    border: 2px solid var(--border); 
+    border-radius: var(--radius); 
+    transition: all 0.2s ease; 
+    cursor: pointer;
+    background: var(--card-bg);
+    position: relative;
+    display: grid;
+    gap: 12px;
+}
+
+.account-card:hover { 
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-lg);
+}
+
+.account-card.selected { 
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), var(--shadow-lg);
+}
+
+.account-card.current-account {
+    border-color: var(--success);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+}
+
+.account-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.account-name { 
+    font-weight: 700; 
+    font-size: 18px;
+    color: var(--text);
+    margin: 0;
+}
+
+.account-status {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-current {
+    background: var(--success);
+    color: white;
+}
+
+.account-info { 
+    font-size: 14px; 
+    color: var(--text-light);
+    display: grid;
+    gap: 6px;
+}
+
+.info-row {
+    display: flex;
+}
+
+.info-label {
+    font-weight: 500;
+}
+
+.usage-bar {
+    background: var(--soft);
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.usage-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success), var(--warning));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.account-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn { 
+    padding: 8px 16px; 
+    border: 2px solid var(--border); 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: 600; 
+    font-size: 14px;
+    transition: all 0.2s ease; 
+    background: var(--card-bg);
+    color: var(--text);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-width: 1px;
+}
+
+.btn-primary { 
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-primary:hover:not(:disabled) { 
+    background: var(--primary);
+    color: white;
+}
+
+.btn-success { 
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.btn-success:hover:not(:disabled) { 
+    background: var(--success);
+    color: white;
+}
+
+.btn-warning { 
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.btn-warning:hover:not(:disabled) { 
+    background: var(--warning);
+    color: white;
+}
+
+.btn-danger { 
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.btn-danger:hover:not(:disabled) { 
+    background: var(--danger);
+    color: white;
+}
+
+.btn-secondary {
+    border-color: var(--border-hover);
+    color: var(--text-light);
+}
+
+.btn-secondary:hover:not(:disabled) { 
+    background: var(--soft);
+    border-color: var(--border);
+}
+
+.sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-group { 
+    margin-bottom: 16px; 
+}
+
+.input-group label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-weight: 600; 
+    color: var(--text);
+    font-size: 14px;
+}
+
+.input-group input, 
+.input-group textarea { 
+    width: 100%; 
+    padding: 12px 16px; 
+    border: 2px solid var(--border); 
+    border-radius: 8px; 
+    font-size: 14px;
+    transition: border-color 0.2s;
+    background: var(--card-bg);
+    resize: vertical;
+}
+
+.input-group input:focus, 
+.input-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.alert { 
+    padding: 16px 20px; 
+    border-radius: var(--radius); 
+    margin: 16px 0; 
+    font-weight: 500;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.alert-success { 
+    border-color: var(--success);
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.alert-error { 
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.loading-spinner {
+    border: 3px solid var(--border);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.collapsible {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 12px 0;
+    overflow: hidden;
+}
+
+.collapsible-header {
+    background: var(--soft);
+    padding: 16px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s ease;
+}
+
+.collapsible-header:hover {
+    background: var(--border);
+}
+
+.collapsible-content {
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    display: none;
+}
+
+.collapsible.open .collapsible-content {
+    display: block;
+}
+
+.toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 1000;
+    max-width: 400px;
+    padding: 16px 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    border: 2px solid;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 1024px) { 
+    .main-grid { 
+        grid-template-columns: 1fr; 
+        gap: 20px;
+    }
+    
+    .container {
+        padding: 16px;
+    }
+    
+    .header h1 {
+        font-size: 24px;
+    }
+    
+    .toolbar {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .card-body {
+        padding: 16px;
+    }
+    
+    .account-card {
+        padding: 16px;
+    }
+    
+    .toolbar {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+

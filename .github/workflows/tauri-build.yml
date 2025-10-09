@@ -43,10 +43,18 @@ jobs:
           cd codex-tauri-app
           npm install
 
-      - name: Build Tauri app via CLI
+      - name: Debug project layout
         run: |
           cd codex-tauri-app
-          npm run tauri build
+          pwd
+          ls -la
+          ls -la src-tauri || true
+
+      - name: Build Tauri app via CLI (explicit config)
+        run: |
+          cd codex-tauri-app
+          npm exec tauri -- --version
+          npm exec tauri -- build --config src-tauri/tauri.conf.json --ci
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

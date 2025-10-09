@@ -1,6 +1,6 @@
 [package]
 name = "codex-account-manager"
-version = "1.0.0"
+version = "0.1.0"
 description = "Codex 账号管理器"
 authors = ["you"]
 edition = "2021"

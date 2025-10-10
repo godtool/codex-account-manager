@@ -3,10 +3,9 @@ name: Build Tauri App
 on:
   push:
     branches:
-      - main
       - release/**
   pull_request:
-    branches: [ main ]
+    branches: [ release/** ]
   workflow_dispatch:
 
 jobs:
@@ -15,8 +14,7 @@ jobs:
       run:
         working-directory: codex-tauri-app
     env:
-      TAURI_CONFIG: ${{ github.workspace }}/codex-tauri-app/src-tauri/tauri.conf.json
-      RUST_BACKTRACE: full
+      RUST_BACKTRACE: 1
     strategy:
       fail-fast: false
       matrix:
@@ -45,34 +43,10 @@ jobs:
         run: choco install nsis -y
 
       - name: Install frontend dependencies
-        run: |
-          npm install
+        run: npm install
 
-      - name: Debug project layout
-        run: |
-          pwd
-          ls -la
-          ls -la src-tauri || true
-
-      - name: Verify Tauri config
-        run: |
-          echo "TAURI_CONFIG=$TAURI_CONFIG"
-          if [ -f "src-tauri/tauri.conf.json" ]; then
-            echo "Found src-tauri/tauri.conf.json"
-            head -n 20 src-tauri/tauri.conf.json || true
-          else
-            echo "src-tauri/tauri.conf.json NOT FOUND" >&2
-            echo "Listing repository root for diagnostics:" >&2
-            ls -la "$GITHUB_WORKSPACE" >&2 || true
-            exit 1
-          fi
-
-      - name: Build Tauri app via CLI (explicit config)
-        run: |
-          npm exec tauri -- --version
-          echo "Using config: $TAURI_CONFIG"
-          test -f "$TAURI_CONFIG" && cat "$TAURI_CONFIG" | head -n 5 || true
-          npm exec tauri -- build --config "$TAURI_CONFIG" --ci
+      - name: Build Tauri app
+        run: npm run build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

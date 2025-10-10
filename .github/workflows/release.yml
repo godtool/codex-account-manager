@@ -28,7 +28,6 @@ jobs:
       run:
         working-directory: codex-tauri-app
     env:
-      TAURI_CONFIG: ${{ github.workspace }}/codex-tauri-app/src-tauri/tauri.conf.json
       RUST_BACKTRACE: 1
     strategy:
       fail-fast: false
@@ -58,19 +57,10 @@ jobs:
         run: choco install nsis -y
 
       - name: Install frontend dependencies
-        run: |
-          npm install
+        run: npm install
 
-      - name: Debug project layout
-        run: |
-          pwd
-          ls -la
-          ls -la src-tauri || true
-
-      - name: Build Tauri app via CLI (explicit config)
-        run: |
-          npm exec tauri -- --version
-          npm exec tauri -- build --ci
+      - name: Build Tauri app
+        run: npm run build
 
       - name: Upload artifacts to GitHub Release
         uses: softprops/action-gh-release@v1

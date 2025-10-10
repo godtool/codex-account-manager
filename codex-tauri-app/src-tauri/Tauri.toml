@@ -13,16 +13,14 @@ frontendDist = "../dist"
 
 [app]
 withGlobalTauri = false
-windows = [
-    {
-        title = "Codex 账号管理器",
-        width = 1200,
-        height = 800,
-        resizable = true,
-        fullscreen = false
-    }
-]
 security = { csp = null }
+
+[[app.windows]]
+title = "Codex 账号管理器"
+width = 1200
+height = 800
+resizable = true
+fullscreen = false
 
 [bundle]
 identifier = "com.codex.account-manager"

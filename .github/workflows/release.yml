@@ -24,9 +24,6 @@ jobs:
 
   build-tauri:
     needs: create-release
-    defaults:
-      run:
-        working-directory: codex-tauri-app
     env:
       RUST_BACKTRACE: 1
     strategy:
@@ -57,9 +54,11 @@ jobs:
         run: choco install nsis -y
 
       - name: Install frontend dependencies
+        working-directory: codex-tauri-app
         run: npm install
 
       - name: Build Tauri app
+        working-directory: codex-tauri-app
         run: npm run build
 
       - name: Upload artifacts to GitHub Release

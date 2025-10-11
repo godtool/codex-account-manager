@@ -256,86 +256,84 @@ function formatDate(dateStr) {
 // =============================================================================
 
 function renderAccounts() {
-    const container = document.getElementById('accounts-list');
+    const tbody = document.getElementById('accounts-list');
+    const emptyState = document.getElementById('empty-state');
+    const accountCountEl = document.getElementById('account-count');
+    
+    // 更新账号计数
+    accountCountEl.textContent = `共 ${accounts.length} 个账号`;
     
     if (accounts.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon"></div>
-                <div>还没有保存的账号配置</div>
-                <button class="btn btn-primary" onclick="toggleCollapsible('add-config-section')" style="margin-top: 16px;">
-                    添加第一个账号
-                </button>
-            </div>
-        `;
+        tbody.style.display = 'none';
+        emptyState.style.display = 'block';
         return;
     }
     
+    tbody.style.display = '';
+    emptyState.style.display = 'none';
+    
     console.log('🎨 开始渲染', accounts.length, '个账号');
     
-    container.innerHTML = accounts.map(account => {
+    tbody.innerHTML = accounts.map(account => {
         console.log(`渲染账号 ${account.name}: is_current=${account.is_current}`);
+        const rowClass = account.is_current ? 'current-row' : '';
         return `
-        <div class="account-card ${account.is_current ? 'current-account' : ''} ${selectedAccount === account.name ? 'selected' : ''}" 
-             onclick="selectAccount('${account.name}')" data-account="${account.name}">
-            <div class="account-header">
-                <div class="account-name">${account.name}</div>
-                ${account.is_current ? '<div class="account-status status-current">当前</div>' : ''}
-            </div>
-            <div class="account-info">
-                <div class="info-row">
-                    <span class="info-label">邮箱：</span>
-                    <span>${account.email}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">计划：</span>
-                    <span>${account.plan}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">保存：</span>
-                    <span>${account.saved_at}</span>
-                </div>
-            </div>
-            <div id="usage-${account.name}">
-                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-light); font-size: 12px;">
-                    <div class="loading-spinner"></div>
-                    <span>正在加载用量...</span>
-                </div>
-            </div>
-            <div class="account-actions">
-                <button class="btn btn-sm btn-warning" onclick="handleSwitchClick(event, '${account.name}')">
-                    切换
-                </button>
-                ${account.is_current ? `
-                    <button class="btn btn-sm btn-primary" onclick="handleRefreshClick(event, '${account.name}')">
-                        刷新用量
+        <tr class="${rowClass}" data-account="${account.name}" onclick="selectRow('${account.name}')">
+            <td>
+                ${account.is_current ? '<span class="status-indicator current"></span>' : ''}
+            </td>
+            <td class="account-name-cell">${account.name}</td>
+            <td class="account-email-cell">${account.email}</td>
+            <td class="account-plan-cell">
+                <span class="plan-badge ${getPlanClass(account.plan)}">${account.plan}</span>
+            </td>
+            <td class="usage-cell" id="usage-primary-${account.name}">
+                <span class="usage-text">-</span>
+            </td>
+            <td class="usage-cell" id="usage-secondary-${account.name}">
+                <span class="usage-text">-</span>
+            </td>
+            <td class="time-cell">${account.saved_at}</td>
+            <td>
+                <div class="actions-cell">
+                    <button class="btn-secondary" onclick="handleSwitchClick(event, '${account.name}')" title="切换到此账号">
+                        切换
                     </button>
-                ` : `
-                    <button class="btn btn-sm btn-danger" onclick="handleDeleteClick(event, '${account.name}')">
+                    <button class="btn-primary" ${account.is_current ? '' : 'disabled'} onclick="handleRefreshClick(event, '${account.name}')" title="${account.is_current ? '刷新用量数据' : '仅当前账号可刷新'}">
+                        刷新
+                    </button>
+                    <button class="btn-danger" onclick="handleDeleteClick(event, '${account.name}')" title="${account.is_current ? '当前账号请先切换后再删除' : '删除此账号'}">
                         删除
                     </button>
-                `}
-            </div>
-        </div>
+                </div>
+            </td>
+        </tr>
         `;
     }).join('');
     
     // 延迟加载用量信息
     accounts.forEach((account, index) => {
-        setTimeout(() => loadAccountUsage(account.name), index * 200);
+        setTimeout(() => loadAccountUsage(account.name), index * 100);
     });
 }
 
-function selectAccount(accountName) {
-    document.querySelectorAll('.account-card').forEach(card => {
-        card.classList.remove('selected');
+function getPlanClass(plan) {
+    if (!plan || plan === '未知') return '';
+    const planLower = plan.toLowerCase();
+    if (planLower.includes('plus')) return 'plus';
+    if (planLower.includes('pro')) return 'pro';
+    return '';
+}
+
+function selectRow(accountName) {
+    document.querySelectorAll('.accounts-table tbody tr').forEach(row => {
+        row.classList.remove('selected-row');
     });
     
-    const card = document.querySelector(`[data-account="${accountName}"]`);
-    if (card) {
-        card.classList.add('selected');
+    const row = document.querySelector(`tr[data-account="${accountName}"]`);
+    if (row) {
+        row.classList.add('selected-row');
         selectedAccount = accountName;
-        updateActionButtons();
     }
 }
 
@@ -358,22 +356,6 @@ function handleRefreshClick(event, accountName) {
     refreshCurrentAccountUsage(accountName);
 }
 
-function updateActionButtons() {
-    const switchBtn = document.getElementById('switch-btn');
-    const deleteBtn = document.getElementById('delete-btn');
-    
-    if (selectedAccount) {
-        switchBtn.disabled = false;
-        deleteBtn.disabled = false;
-        switchBtn.innerHTML = `切换到 ${selectedAccount}`;
-        deleteBtn.innerHTML = `删除 ${selectedAccount}`;
-    } else {
-        switchBtn.disabled = true;
-        deleteBtn.disabled = true;
-        switchBtn.innerHTML = '切换账号';
-        deleteBtn.innerHTML = '删除账号';
-    }
-}
 
 // =============================================================================
 // 账号操作 (与 Python 逻辑一致)
@@ -459,7 +441,6 @@ async function quickSwitchAccount(accountName) {
         
         showMessage(`成功切换到账号: ${accountName}`, 'success');
         selectedAccount = null;
-        updateActionButtons();
         
         setTimeout(() => {
             loadAccounts();
@@ -490,13 +471,18 @@ async function quickDeleteAccount(accountName) {
     try {
         const account = accounts.find(a => a.name === accountName);
         if (!account) return;
-        
+
+        // 防止删除当前账号
+        if (account.is_current) {
+            showMessage('当前账号不可删除，请先切换到其他账号后再删除', 'error');
+            return;
+        }
+
         await remove(account.path);
         
         showMessage(`成功删除账号: ${accountName}`, 'success');
         if (selectedAccount === accountName) {
             selectedAccount = null;
-            updateActionButtons();
         }
         await loadAccounts();
     } catch (e) {
@@ -504,60 +490,6 @@ async function quickDeleteAccount(accountName) {
     }
 }
 
-// 切换账号 (侧边栏按钮)
-async function switchAccount() {
-    if (!selectedAccount) {
-        showMessage('请先选择要切换的账号', 'error');
-        return;
-    }
-    await quickSwitchAccount(selectedAccount);
-}
-
-// 删除账号 (侧边栏按钮)
-async function deleteAccount() {
-    if (!selectedAccount) {
-        showMessage('请先选择要删除的账号', 'error');
-        return;
-    }
-    await quickDeleteAccount(selectedAccount);
-}
-
-// 添加配置
-async function addConfig() {
-    const accountName = document.getElementById('config-name').value.trim();
-    const configContent = document.getElementById('config-content').value.trim();
-    
-    if (!accountName || !configContent) {
-        showMessage('请输入账号名称和配置内容', 'error');
-        return;
-    }
-    
-    try {
-        showMessage('正在保存配置...', 'success');
-        
-        const config = JSON.parse(configContent);
-        const email = extractEmailFromToken(config);
-        
-        config.saved_at = new Date().toISOString();
-        config.account_name = accountName;
-        if (email) config.email = email;
-        
-        const accountFile = await join(PATHS.accountsDir, `${accountName}.json`);
-        await writeJsonSafe(accountFile, config);
-        
-        showMessage(`成功保存账号配置: ${accountName}`, 'success');
-        document.getElementById('config-name').value = '';
-        document.getElementById('config-content').value = '';
-        toggleCollapsible('add-config-section');
-        await loadAccounts();
-    } catch (e) {
-        if (e.message.includes('JSON')) {
-            showMessage('配置内容格式错误，请检查 JSON 格式', 'error');
-        } else {
-            showMessage('保存配置失败: ' + e.message, 'error');
-        }
-    }
-}
 
 // =============================================================================
 // 用量查询功能 (完整实现)
@@ -776,63 +708,32 @@ async function getUsageSummary(email) {
     return summary;
 }
 
-// 格式化用量信息为 HTML (与Web端一致)
-function formatUsageHTML(summary, fromCache = false) {
-    if (!summary || summary.status === 'failed') {
-        return `<div style="color: var(--danger); font-size: 12px; margin-top: 8px;">[错误] ${summary?.errors?.[0] || '查询失败'}</div>`;
+// 格式化用量单元格 HTML
+function formatUsageCell(percent, resetInfo, fromCache = false) {
+    if (percent === null || percent === undefined) {
+        return '<span class="usage-text" style="color: var(--text-muted);">-</span>';
     }
     
-    if (summary.status && summary.status.includes('success')) {
-        let primaryPercent = 0;
-        let secondaryPercent = 0;
-        let primaryResetInfo = '';
-        let secondaryResetInfo = '';
-        let cacheIcon = '';
-        
-        if (fromCache) {
-            cacheIcon = '<span style="color: var(--text-light);">[缓存]</span>';
-        }
-        
-        if (summary.rate_limits) {
-            if (summary.rate_limits.primary) {
-                primaryPercent = parseInt(summary.rate_limits.primary.used_percent) || 0;
-                const resetSeconds = summary.rate_limits.primary.resets_in_seconds;
-                const resetTime = new Date(Date.now() + resetSeconds * 1000);
-                primaryResetInfo = resetTime.toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'});
-            }
-            if (summary.rate_limits.secondary) {
-                secondaryPercent = parseInt(summary.rate_limits.secondary.used_percent) || 0;
-                const resetSeconds = summary.rate_limits.secondary.resets_in_seconds;
-                const resetTime = new Date(Date.now() + resetSeconds * 1000);
-                secondaryResetInfo = `${resetTime.toLocaleDateString('zh-CN', {month: '2-digit', day: '2-digit'})} ${resetTime.toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}`;
-            }
-        }
-        const maxPercent = Math.max(primaryPercent, secondaryPercent);
-        const barColor = maxPercent > 80 ? 'var(--danger)' : maxPercent > 60 ? 'var(--warning)' : 'var(--success)';
-        
-        return `
-            <div style="margin-top: 8px;">
-                <div class="usage-bar">
-                    <div class="usage-fill" style="width: ${maxPercent}%; background: ${barColor};"></div>
-                </div>
-                <div style="font-size: 14px; color: var(--text-light); display: flex; justify-content: space-between;">
-                    <span>5h: ${primaryPercent}% ${primaryResetInfo ? `(${primaryResetInfo}重置)` : ''}</span>
-                    <span>${cacheIcon}</span>
-                </div>
-                <div style="font-size: 14px; color: var(--text-light);">
-                    周: ${secondaryPercent}% ${secondaryResetInfo ? `(${secondaryResetInfo}重置)` : ''}
-                </div>
+    const barClass = percent > 80 ? 'high' : percent > 60 ? 'medium' : 'low';
+    const cacheIndicator = fromCache ? ' <span class="cache-badge" title="缓存数据">缓存</span>' : '';
+    
+    return `
+        <div class="usage-indicator">
+            <div class="usage-bar-mini">
+                <div class="usage-bar-fill ${barClass}" style="width: ${percent}%;"></div>
             </div>
-        `;
-    } else {
-        return `<div style="color: var(--warning); font-size: 12px; margin-top: 8px;">[查询失败]</div>`;
-    }
+            <span class="usage-text">${percent}%${cacheIndicator}</span>
+        </div>
+        ${resetInfo ? `<div class="usage-reset">${resetInfo}</div>` : ''}
+    `;
 }
 
-// 加载账号用量 (与Web端一致)
+// 加载账号用量 (表格版本)
 async function loadAccountUsage(accountName) {
-    const usageElement = document.getElementById(`usage-${accountName}`);
-    if (!usageElement) return;
+    const primaryCell = document.getElementById(`usage-primary-${accountName}`);
+    const secondaryCell = document.getElementById(`usage-secondary-${accountName}`);
+    
+    if (!primaryCell || !secondaryCell) return;
     
     const account = accounts.find(a => a.name === accountName);
     if (!account) return;
@@ -842,27 +743,56 @@ async function loadAccountUsage(accountName) {
         const cachedUsage = await loadCachedUsage(account.email);
         
         if (cachedUsage) {
-            const summary = {
-                status: 'success(缓存)',
-                ...cachedUsage,
-                from_cache: true
-            };
-            usageElement.innerHTML = formatUsageHTML(summary, true);
+            // 使用缓存数据
+            const primary = cachedUsage.rate_limits?.primary;
+            const secondary = cachedUsage.rate_limits?.secondary;
+            
+            if (primary) {
+                const percent = parseInt(primary.used_percent) || 0;
+                const resetTime = new Date(Date.now() + (primary.resets_in_seconds || 0) * 1000);
+                const resetInfo = resetTime.toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'});
+                primaryCell.innerHTML = formatUsageCell(percent, resetInfo, true);
+            }
+            
+            if (secondary) {
+                const percent = parseInt(secondary.used_percent) || 0;
+                const resetTime = new Date(Date.now() + (secondary.resets_in_seconds || 0) * 1000);
+                const resetInfo = `${resetTime.toLocaleDateString('zh-CN', {month: '2-digit', day: '2-digit'})} ${resetTime.toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}`;
+                secondaryCell.innerHTML = formatUsageCell(percent, resetInfo, true);
+            }
         } else {
             // 只有当前账号才会尝试实时查询
             if (account.is_current) {
                 const summary = await getUsageSummary(account.email);
-                if (summary.status === 'success') {
-                    usageElement.innerHTML = formatUsageHTML(summary, false);
+                if (summary.status === 'success' && summary.rate_limits) {
+                    const primary = summary.rate_limits.primary;
+                    const secondary = summary.rate_limits.secondary;
+                    
+                    if (primary) {
+                        const percent = parseInt(primary.used_percent) || 0;
+                        const resetTime = new Date(Date.now() + (primary.resets_in_seconds || 0) * 1000);
+                        const resetInfo = resetTime.toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'});
+                        primaryCell.innerHTML = formatUsageCell(percent, resetInfo, false);
+                    }
+                    
+                    if (secondary) {
+                        const percent = parseInt(secondary.used_percent) || 0;
+                        const resetTime = new Date(Date.now() + (secondary.resets_in_seconds || 0) * 1000);
+                        const resetInfo = `${resetTime.toLocaleDateString('zh-CN', {month: '2-digit', day: '2-digit'})} ${resetTime.toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}`;
+                        secondaryCell.innerHTML = formatUsageCell(percent, resetInfo, false);
+                    }
                 } else {
-                    usageElement.innerHTML = `<div style="color: var(--warning); font-size: 12px; margin-top: 8px;">[暂无用量数据]</div>`;
+                    primaryCell.innerHTML = '<span class="usage-text" style="color: var(--warning);">无数据</span>';
+                    secondaryCell.innerHTML = '<span class="usage-text" style="color: var(--warning);">无数据</span>';
                 }
             } else {
-                usageElement.innerHTML = `<div style="color: var(--text-light); font-size: 12px; margin-top: 8px;">💡 无缓存数据</div>`;
+                primaryCell.innerHTML = '<span class="usage-text" style="color: var(--text-muted);">-</span>';
+                secondaryCell.innerHTML = '<span class="usage-text" style="color: var(--text-muted);">-</span>';
             }
         }
     } catch (error) {
-        usageElement.innerHTML = `<div style="color: var(--danger); font-size: 12px; margin-top: 8px;">[网络错误]</div>`;
+        primaryCell.innerHTML = '<span class="usage-text" style="color: var(--danger);">错误</span>';
+        secondaryCell.innerHTML = '<span class="usage-text" style="color: var(--danger);">错误</span>';
     }
 }
 
@@ -928,34 +858,21 @@ function setButtonLoading(buttonId, loading) {
     if (loading) {
         button.disabled = true;
         button.dataset.originalText = button.innerHTML;
-        button.innerHTML = '<div class="loading-spinner"></div> 处理中...';
+        const icon = button.querySelector('.btn-icon');
+        const text = button.querySelector('span:not(.btn-icon)');
+        if (icon && text) {
+            icon.textContent = '⏳';
+            text.textContent = '处理中';
+        }
     } else {
         button.disabled = false;
         button.innerHTML = button.dataset.originalText || button.innerHTML;
     }
 }
 
-function toggleCollapsible(id) {
-    const element = document.getElementById(id);
-    const isOpen = element.classList.contains('open');
-    
-    document.querySelectorAll('.collapsible').forEach(el => {
-        el.classList.remove('open');
-        const arrow = el.querySelector('.collapsible-header span:last-child');
-        if (arrow) arrow.textContent = '▼';
-    });
-    
-    if (!isOpen) {
-        element.classList.add('open');
-        const arrow = element.querySelector('.collapsible-header span:last-child');
-        if (arrow) arrow.textContent = '▲';
-    }
-}
-
 function refreshData() {
     if (!isLoading) {
         selectedAccount = null;
-        updateActionButtons();
         loadAccounts();
     }
 }
@@ -970,7 +887,6 @@ async function initApp() {
         await initPaths();
         await ensureDirs();
         await loadAccounts();
-        updateActionButtons();
         console.log('✅ 应用初始化完成');
     } catch (e) {
         console.error('初始化失败:', e);
@@ -985,12 +901,8 @@ document.addEventListener('DOMContentLoaded', initApp);
 window.quickSave = quickSave;
 window.quickSwitchAccount = quickSwitchAccount;
 window.quickDeleteAccount = quickDeleteAccount;
-window.switchAccount = switchAccount;
-window.deleteAccount = deleteAccount;
-window.addConfig = addConfig;
-window.selectAccount = selectAccount;
+window.selectRow = selectRow;
 window.refreshCurrentAccountUsage = refreshCurrentAccountUsage;
-window.toggleCollapsible = toggleCollapsible;
 window.refreshData = refreshData;
 window.handleSwitchClick = handleSwitchClick;
 window.handleDeleteClick = handleDeleteClick;

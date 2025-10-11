@@ -7,74 +7,60 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="header">
-        <h1>Codex 账号管理器</h1>
-        <p>智能管理与切换多个 OpenAI 账号配置</p>
+    <!-- 顶部工具栏 -->
+    <div class="titlebar">
+        <div class="titlebar-left">
+            <span class="app-title">Codex 账号管理器</span>
+        </div>
+        <div class="titlebar-right">
+            <button class="toolbar-btn" id="quick-save-btn" onclick="quickSave()" title="备份当前账号">备份</button>
+            <button class="toolbar-btn" onclick="refreshData()" title="刷新列表">刷新</button>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="main-grid">
-            <div class="card accounts-container">
-                <div class="card-header">账号列表</div>
-                <div class="card-body">
-                    <div class="toolbar">
-                        <button class="btn btn-success" id="quick-save-btn" onclick="quickSave()">
-                            快速备份当前账号
-                        </button>
-                        <button class="btn btn-secondary" onclick="refreshData()">
-                            刷新页面
-                        </button>
-                    </div>
-                    <div class="alert" style="background: #f0f9ff; border-color: #0ea5e9; color: #0c4a6e; margin-bottom: 20px;">
-                        只能刷新当前账号的用量数据。刷新数据前请先用 codex 发送消息后点击「刷新用量」按钮。
-                    </div>
-                    <div id="accounts-list" class="accounts-grid">
-                        <div class="empty-state">
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 账号列表表格 -->
+        <div class="table-container">
+            <table class="accounts-table" id="accounts-table">
+                <thead>
+                    <tr>
+                        <th width="30"></th>
+                        <th>账号名称</th>
+                        <th>邮箱</th>
+                        <th>计划</th>
+                        <th>5小时用量</th>
+                        <th>周用量</th>
+                        <th>保存时间</th>
+                        <th width="180">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="accounts-list">
+                    <tr class="loading-row">
+                        <td colspan="8" style="text-align: center; padding: 40px;">
                             <div class="loading-spinner"></div>
-                            <div style="margin-top: 12px;">正在加载账号列表...</div>
-                        </div>
-                    </div>
-                </div>
+                            <div style="margin-top: 8px; color: var(--text-light);">正在加载账号列表...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 空状态 -->
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-text">还没有保存的账号配置</div>
+                <button class="btn-primary" onclick="quickSave()">
+                    备份当前账号
+                </button>
             </div>
+        </div>
 
-            <div class="sidebar-actions">
-                <div class="card">
-                    <div class="card-header">快速操作</div>
-                    <div class="card-body">
-                        <div style="display: flex; flex-direction: column; gap: 12px;">
-                            <button class="btn btn-warning" onclick="switchAccount()" id="switch-btn">
-                                切换账号
-                            </button>
-                            <button class="btn btn-danger" onclick="deleteAccount()" id="delete-btn">
-                                删除账号
-                            </button>
-                        </div>
-                        
-                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-light);">
-                            先选择一个账号来执行操作
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="collapsible" id="add-config-section">
-                    <div class="collapsible-header" onclick="toggleCollapsible('add-config-section')">
-                        <span>添加配置文件</span>
-                        <span>▼</span>
-                    </div>
-                    <div class="collapsible-content">
-                        <div class="input-group">
-                            <label>账号名称:</label>
-                            <input type="text" id="config-name" placeholder="输入账号名称">
-                        </div>
-                        <div class="input-group">
-                            <label>配置内容:</label>
-                            <textarea id="config-content" rows="6" placeholder="粘贴完整的 auth.json 配置内容"></textarea>
-                        </div>
-                        <button class="btn btn-success" onclick="addConfig()" style="width: 100%;">
-                            保存配置
-                        </button>
-                    </div>
-                </div>
+        <!-- 底部状态栏 -->
+        <div class="statusbar">
+            <div class="statusbar-item">
+                <span id="status-text">刷新用量前请先用 Codex 发送消息</span>
+            </div>
+            <div class="statusbar-item">
+                <span id="account-count">共 0 个账号</span>
             </div>
         </div>
     </div>

@@ -53,21 +53,14 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: choco install nsis -y
 
-      - name: Install frontend dependencies
-        working-directory: codex-tauri-app
-        run: npm install
-
-      - name: Build Tauri app
-        working-directory: codex-tauri-app
-        run: npm run build
-
-      - name: Upload artifacts to GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Build Tauri app and upload to release
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref_name }}
-          files: |
-            codex-tauri-app/src-tauri/target/release/bundle/**
-          draft: true
+          projectPath: codex-tauri-app
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Codex Account Manager v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
           prerelease: false

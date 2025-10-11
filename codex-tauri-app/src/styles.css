@@ -119,12 +119,10 @@ body {
 
 .accounts-table tbody tr.current-row {
     background: #d1fae5;
-    border-left: 3px solid var(--success);
 }
 
 .accounts-table tbody tr.selected-row {
     background: #dbeafe;
-    border-left: 3px solid var(--primary);
 }
 
 .accounts-table td {

@@ -439,13 +439,9 @@ async function quickSwitchAccount(accountName) {
         await writeJsonSafe(PATHS.systemAuthFile, cleanConfig);
         console.log('✅ 系统配置写入成功');
         
-        showMessage(`成功切换到账号: ${accountName}`, 'success');
+        showMessage(`已切换到账号 ${accountName}，请用 codex 发送消息后刷新用量`, 'success');
         selectedAccount = null;
-        
-        setTimeout(() => {
-            loadAccounts();
-            showMessage(`已切换到账号 ${accountName}，请用 codex 发送消息后刷新用量`, 'success');
-        }, 1000);
+        await loadAccounts();
     } catch (e) {
         console.error('❌ 切换账号错误:', e);
         showMessage('切换账号失败: ' + (e.message || String(e)), 'error');

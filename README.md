@@ -49,6 +49,15 @@ codex-account-manager/
 # Linux: .deb 或 .AppImage
 ```
 
+**macOS 用户注意 ⚠️**
+
+由于应用未经过苹果官方签名，首次运行可能会提示「应用已损坏」。解决方法：
+
+1. 打开终端（Terminal）
+2. 输入 `xattr -cr ` （注意 cr 后面有个空格）
+3. 把应用图标拖拽到终端窗口
+4. 按回车执行
+
 **或从源码构建**
 ```bash
 cd codex-tauri-app

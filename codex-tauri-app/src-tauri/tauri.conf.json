@@ -18,5 +18,20 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Codex Account Manager",
+        "width": 1000,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
   }
 }

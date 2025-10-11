@@ -1,7 +1,7 @@
 // Tauri API 导入
 import { readTextFile, writeTextFile, readDir, mkdir, exists, remove, stat } from '@tauri-apps/plugin-fs';
-import { homeDir, join, appConfigDir } from '@tauri-apps/api/path';
-import { message } from '@tauri-apps/plugin-dialog';
+import { homeDir, join, appDataDir } from '@tauri-apps/api/path';
+import { message, ask, confirm } from '@tauri-apps/plugin-dialog';
 
 // 全局状态
 let selectedAccount = null;
@@ -79,13 +79,13 @@ function extractEmailFromToken(config) {
 
 async function initPaths() {
     const home = await homeDir();
-    const appCfg = await appConfigDir();
+    const appData = await appDataDir();
     
     // 系统 Codex 配置路径
     const systemAuthFile = await join(home, '.codex', 'auth.json');
     
     // 应用配置目录（通用，不依赖用户桌面路径）
-    const codexConfigDir = await join(appCfg, 'codex-config');
+    const codexConfigDir = await join(appData, 'codex-config');
     
     PATHS = {
         systemAuthFile,
@@ -303,15 +303,15 @@ function renderAccounts() {
                 </div>
             </div>
             <div class="account-actions">
-                <button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); quickSwitchAccount('${account.name}')">
+                <button class="btn btn-sm btn-warning" onclick="handleSwitchClick(event, '${account.name}')">
                     切换
                 </button>
                 ${account.is_current ? `
-                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); refreshCurrentAccountUsage('${account.name}')">
+                    <button class="btn btn-sm btn-primary" onclick="handleRefreshClick(event, '${account.name}')">
                         刷新用量
                     </button>
                 ` : `
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); quickDeleteAccount('${account.name}')">
+                    <button class="btn btn-sm btn-danger" onclick="handleDeleteClick(event, '${account.name}')">
                         删除
                     </button>
                 `}
@@ -337,6 +337,25 @@ function selectAccount(accountName) {
         selectedAccount = accountName;
         updateActionButtons();
     }
+}
+
+// 按钮点击处理函数 - 确保事件正确阻止
+function handleSwitchClick(event, accountName) {
+    event.stopPropagation();
+    event.preventDefault();
+    quickSwitchAccount(accountName);
+}
+
+function handleDeleteClick(event, accountName) {
+    event.stopPropagation();
+    event.preventDefault();
+    quickDeleteAccount(accountName);
+}
+
+function handleRefreshClick(event, accountName) {
+    event.stopPropagation();
+    event.preventDefault();
+    refreshCurrentAccountUsage(accountName);
 }
 
 function updateActionButtons() {
@@ -398,7 +417,14 @@ async function quickSwitchAccount(accountName) {
     console.log('🔄 准备切换到账号:', accountName);
     console.log('当前accounts数组:', accounts);
     
-    if (!confirm(`确定要切换到账号 '${accountName}' 吗？`)) {
+    const confirmed = await confirm(`确定要切换到账号 '${accountName}' 吗？`, {
+        title: '确认切换',
+        type: 'warning',
+        okLabel: '确定',
+        cancelLabel: '取消'
+    });
+    
+    if (!confirmed) {
         console.log('用户取消切换');
         return;
     }
@@ -447,7 +473,17 @@ async function quickSwitchAccount(accountName) {
 
 // 快速删除账号
 async function quickDeleteAccount(accountName) {
-    if (!confirm(`确定要删除账号 '${accountName}' 吗？\n\n此操作不可恢复！`)) {
+    const confirmed = await confirm(
+        `确定要删除账号 '${accountName}' 吗？\n\n此操作不可恢复！`,
+        {
+            title: '确认删除',
+            type: 'warning',
+            okLabel: '删除',
+            cancelLabel: '取消'
+        }
+    );
+    
+    if (!confirmed) {
         return;
     }
     
@@ -956,3 +992,6 @@ window.selectAccount = selectAccount;
 window.refreshCurrentAccountUsage = refreshCurrentAccountUsage;
 window.toggleCollapsible = toggleCollapsible;
 window.refreshData = refreshData;
+window.handleSwitchClick = handleSwitchClick;
+window.handleDeleteClick = handleDeleteClick;
+window.handleRefreshClick = handleRefreshClick;

@@ -53,6 +53,10 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: choco install nsis -y
 
+      - name: Install frontend dependencies
+        working-directory: codex-tauri-app
+        run: npm install
+
       - name: Build Tauri app and upload to release
         uses: tauri-apps/tauri-action@v0
         env:

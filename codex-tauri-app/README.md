@@ -35,13 +35,13 @@ npm install
 ### 2. 运行开发版本
 
 ```bash
-npm run dev
+npm run tauri dev
 ```
 
 ### 3. 构建应用
 
 ```bash
-npm run build
+npm run tauri build
 ```
 
 构建后的应用在 `src-tauri/target/release/bundle/` 目录下。

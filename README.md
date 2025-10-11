@@ -65,7 +65,7 @@ codex-account-manager/
 ```bash
 cd codex-tauri-app
 npm install
-npm run build
+npm run tauri build
 ```
 
 **功能特性**

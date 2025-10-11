@@ -4,6 +4,27 @@
 
 ## 快速开始
 
+### 前置要求
+
+**必须安装：**
+1. **Node.js** (推荐 18+)
+2. **Rust** - [安装指南](https://www.rust-lang.org/tools/install)
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+
+**系统依赖：**
+- **macOS**: 安装 Xcode Command Line Tools
+  ```bash
+  xcode-select --install
+  ```
+- **Linux (Ubuntu/Debian)**: 
+  ```bash
+  sudo apt update
+  sudo apt install libwebkit2gtk-4.0-dev build-essential curl wget file libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+  ```
+- **Windows**: 需要 Microsoft Visual Studio C++ Build Tools
+
 ### 1. 安装依赖
 
 ```bash

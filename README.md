@@ -59,6 +59,9 @@ codex-account-manager/
 4. 按回车执行
 
 **或从源码构建**
+
+前置要求：需要安装 Node.js 和 Rust，详见 [codex-tauri-app/README.md](codex-tauri-app/README.md)
+
 ```bash
 cd codex-tauri-app
 npm install

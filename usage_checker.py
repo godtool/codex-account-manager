@@ -219,60 +219,85 @@ class CodexUsageChecker:
             return "\n".join(lines)
         
         # Token 使用情况
-        if summary.get("token_usage"):
-            usage = summary["token_usage"]
-            token_rows = [
-                ("输入 tokens", f"{usage.get('input_tokens', 0):,}"),
-                ("缓存 tokens", f"{usage.get('cached_input_tokens', 0):,}"),
-                ("输出 tokens", f"{usage.get('output_tokens', 0):,}"),
-                ("总计 tokens", f"{usage.get('total_tokens', 0):,}")
-            ]
-            token_table = build_table(["类型", "数值"], token_rows)
-            if token_table:
-                lines.append("\n📊 Token 使用情况:")
-                lines.append(token_table)
-        
-        # 速率限制
-        if summary.get("rate_limits"):
-            limits = summary["rate_limits"]
-            rate_rows = []
-            for key, limit in limits.items():
-                if isinstance(limit, dict):
-                    used_percent = limit.get("used_percent", 0)
-                    window_minutes = limit.get("window_minutes", 0)
-                    window_type = "5小时窗口" if window_minutes <= 330 else "周限制"
+        usage = summary.get("token_usage") or {}
+        input_tokens = f"{usage.get('input_tokens', 0):,}"
+        cached_tokens = f"{usage.get('cached_input_tokens', 0):,}"
+        output_tokens = f"{usage.get('output_tokens', 0):,}"
+        total_tokens = f"{usage.get('total_tokens', 0):,}"
 
-                    reset_time = None
-                    reset_str = ""
-                    resets_in_seconds = limit.get("resets_in_seconds")
-                    if isinstance(resets_in_seconds, (int, float)):
-                        reset_time = datetime.now() + timedelta(seconds=float(resets_in_seconds))
-                    else:
-                        resets_at = limit.get("resets_at")
-                        if isinstance(resets_at, (int, float)):
-                            try:
-                                reset_time = datetime.fromtimestamp(float(resets_at))
-                            except (OverflowError, ValueError):
-                                reset_time = None
-                        elif isinstance(resets_at, str) and resets_at:
-                            reset_str = resets_at
+        # 速率限制（选取最关键的 5 小时与周窗口）
+        limits = summary.get("rate_limits") or {}
+        five_hour_limit = None
+        weekly_limit = None
 
-                    # 格式化重置时间 - 如果是今天就只显示时间，否则显示日期+时间
-                    if reset_time:
-                        now = datetime.now()
-                        if reset_time.date() == now.date():
-                            reset_str = reset_time.strftime('%H:%M')
-                        else:
-                            reset_str = reset_time.strftime('%m/%d %H:%M')
-                    rate_rows.append([
-                        window_type,
-                        f"{used_percent:.1f}%",
-                        reset_str or "未知"
-                    ])
-            rate_table = build_table(["窗口类型", "已使用", "重置时间"], rate_rows)
-            if rate_table:
-                lines.append("\n⏰ 速率限制:")
-                lines.append(rate_table)
+        def get_used_percent(limit):
+            try:
+                return float(limit.get("used_percent", -1))
+            except (TypeError, ValueError):
+                return -1.0
+
+        def format_reset(limit):
+            if not isinstance(limit, dict):
+                return "未知"
+            reset_time = None
+            reset_str = ""
+            resets_in_seconds = limit.get("resets_in_seconds")
+            if isinstance(resets_in_seconds, (int, float)):
+                reset_time = datetime.now() + timedelta(seconds=float(resets_in_seconds))
+            else:
+                resets_at = limit.get("resets_at")
+                if isinstance(resets_at, (int, float)):
+                    try:
+                        reset_time = datetime.fromtimestamp(float(resets_at))
+                    except (OverflowError, ValueError):
+                        reset_time = None
+                elif isinstance(resets_at, str) and resets_at:
+                    reset_str = resets_at
+            if reset_time:
+                now = datetime.now()
+                if reset_time.date() == now.date():
+                    reset_str = reset_time.strftime('%H:%M')
+                else:
+                    reset_str = reset_time.strftime('%m/%d %H:%M')
+            return reset_str or "未知"
+
+        for limit in limits.values():
+            if not isinstance(limit, dict):
+                continue
+            window_minutes = limit.get("window_minutes")
+            if not isinstance(window_minutes, (int, float)):
+                continue
+            used_percent = get_used_percent(limit)
+            if window_minutes <= 330:
+                if five_hour_limit is None or used_percent > get_used_percent(five_hour_limit):
+                    five_hour_limit = limit
+            else:
+                if weekly_limit is None or used_percent > get_used_percent(weekly_limit):
+                    weekly_limit = limit
+
+        five_hour_used = f"{get_used_percent(five_hour_limit):.1f}%" if five_hour_limit else "暂无"
+        five_hour_reset = format_reset(five_hour_limit) if five_hour_limit else "暂无"
+        weekly_used = f"{get_used_percent(weekly_limit):.1f}%" if weekly_limit else "暂无"
+        weekly_reset = format_reset(weekly_limit) if weekly_limit else "暂无"
+
+        combined_headers = [
+            "输入tokens", "缓存tokens", "输出tokens", "总计tokens",
+            "5小时已用", "5小时重置", "周已用", "周重置"
+        ]
+        combined_row = [[
+            input_tokens,
+            cached_tokens,
+            output_tokens,
+            total_tokens,
+            five_hour_used,
+            five_hour_reset,
+            weekly_used,
+            weekly_reset
+        ]]
+        combined_table = build_table(combined_headers, combined_row)
+        if combined_table:
+            lines.append("\n📊 用量概览:")
+            lines.append(combined_table)
         
         return "\n".join(lines)
 

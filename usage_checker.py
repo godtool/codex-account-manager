@@ -186,6 +186,21 @@ class CodexUsageChecker:
     
     def format_usage_summary(self, summary: Dict) -> str:
         """格式化使用情况摘要为可读文本"""
+        def build_table(headers, rows):
+            if not rows:
+                return ""
+            col_widths = [len(str(h)) for h in headers]
+            for row in rows:
+                for idx, cell in enumerate(row):
+                    col_widths[idx] = max(col_widths[idx], len(str(cell)))
+            header_line = " | ".join(str(headers[idx]).ljust(col_widths[idx]) for idx in range(len(headers)))
+            separator = "-+-".join("-" * col_widths[idx] for idx in range(len(headers)))
+            data_lines = [
+                " | ".join(str(cell).ljust(col_widths[idx]) for idx, cell in enumerate(row))
+                for row in rows
+            ]
+            return "\n".join([header_line, separator, *data_lines])
+
         lines = [
             f"Codex CLI 用量查询",
             f"查询时间: {summary['check_time']}",
@@ -206,19 +221,21 @@ class CodexUsageChecker:
         # Token 使用情况
         if summary.get("token_usage"):
             usage = summary["token_usage"]
-            lines.extend([
-                "\n📊 Token 使用情况:",
-                f"  输入 tokens: {usage.get('input_tokens', 0):,}",
-                f"  缓存 tokens: {usage.get('cached_input_tokens', 0):,}",
-                f"  输出 tokens: {usage.get('output_tokens', 0):,}",
-                f"  总计 tokens: {usage.get('total_tokens', 0):,}"
-            ])
+            token_rows = [
+                ("输入 tokens", f"{usage.get('input_tokens', 0):,}"),
+                ("缓存 tokens", f"{usage.get('cached_input_tokens', 0):,}"),
+                ("输出 tokens", f"{usage.get('output_tokens', 0):,}"),
+                ("总计 tokens", f"{usage.get('total_tokens', 0):,}")
+            ]
+            token_table = build_table(["类型", "数值"], token_rows)
+            if token_table:
+                lines.append("\n📊 Token 使用情况:")
+                lines.append(token_table)
         
         # 速率限制
         if summary.get("rate_limits"):
             limits = summary["rate_limits"]
-            lines.append("\n⏰ 速率限制:")
-            
+            rate_rows = []
             for key, limit in limits.items():
                 if isinstance(limit, dict):
                     used_percent = limit.get("used_percent", 0)
@@ -247,12 +264,15 @@ class CodexUsageChecker:
                             reset_str = reset_time.strftime('%H:%M')
                         else:
                             reset_str = reset_time.strftime('%m/%d %H:%M')
-                    
-                    lines.extend([
-                        f"  🔄 {window_type}:",
-                        f"    已使用: {used_percent:.1f}%",
-                        f"    重置时间: {reset_str or '未知'}"
+                    rate_rows.append([
+                        window_type,
+                        f"{used_percent:.1f}%",
+                        reset_str or "未知"
                     ])
+            rate_table = build_table(["窗口类型", "已使用", "重置时间"], rate_rows)
+            if rate_table:
+                lines.append("\n⏰ 速率限制:")
+                lines.append(rate_table)
         
         return "\n".join(lines)
 

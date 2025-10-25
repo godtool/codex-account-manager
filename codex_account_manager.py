@@ -8,6 +8,7 @@ OpenAI Codex 账号配置管理器
 import json
 import os
 import shutil
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from usage_checker import CodexUsageChecker, extract_email_from_auth
@@ -381,6 +382,7 @@ def main():
         print("7. 查看当前账号用量（缓存）")
         print("8. 查看指定账号用量（缓存）")
         print("9. 刷新当前账号用量（从session）")
+        print("10. 启动自动刷新当前账号用量（每30秒）")
         print("0. 退出")
         print("-" * 50)
         
@@ -487,6 +489,18 @@ def main():
         
         elif choice == "9":
             manager.check_account_usage(force_refresh=True)
+
+        elif choice == "10":
+            print("\n🔁 已启动自动刷新。按 Ctrl+C 停止。")
+            try:
+                while True:
+                    print("\n" + "=" * 60)
+                    manager.check_account_usage(force_refresh=True)
+                    print("⏳ 将在 30 秒后再次刷新（Ctrl+C 停止）")
+                    time.sleep(30)
+            except KeyboardInterrupt:
+                print("\n⏹️ 自动刷新已停止")
+                continue
         
         elif choice == "0":
             print("👋 再见!")

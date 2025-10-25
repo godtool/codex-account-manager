@@ -380,15 +380,13 @@ def main():
         print("4. 切换账号")
         print("5. 删除账号配置")
         print("6. 显示当前账号")
-        print("7. 查看当前账号用量（缓存）")
-        print("8. 查看指定账号用量（缓存）")
-        print("9. 刷新当前账号用量（从session）")
-        print("10. 启动自动刷新当前账号用量（每5秒）")
+        print("7. 刷新当前账号用量（从 session）")
+        print("8. 启动自动刷新当前账号用量（每5秒）")
         print("0. 退出")
         print("-" * 50)
         
         try:
-            choice = input("请选择操作 (0-9): ").strip()
+            choice = input("请选择操作 (0-8): ").strip()
         except KeyboardInterrupt:
             print("\n👋 再见！")
             break
@@ -473,25 +471,9 @@ def main():
             manager.show_current_account()
         
         elif choice == "7":
-            manager.check_account_usage()
-        
-        elif choice == "8":
-            accounts = manager.list_accounts()
-            if accounts:
-                try:
-                    account_name = input("请输入要查看用量的账号名称: ").strip()
-                    if account_name in accounts:
-                        manager.check_account_usage(account_name)
-                    else:
-                        print("❌ 账号名称不存在")
-                except KeyboardInterrupt:
-                    print("\n⚠️ 操作取消")
-                    continue
-        
-        elif choice == "9":
             manager.check_account_usage(force_refresh=True)
 
-        elif choice == "10":
+        elif choice == "8":
             print("\n🔁 已启动自动刷新。按 Ctrl+C 停止。")
             try:
                 while True:

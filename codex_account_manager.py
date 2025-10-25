@@ -8,7 +8,7 @@ OpenAI Codex 账号配置管理器
 import json
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from usage_checker import CodexUsageChecker, extract_email_from_auth
 from config_utils import get_config_paths, generate_account_name
@@ -110,27 +110,116 @@ class CodexAccountManager:
             return []
         
         accounts = []
+        rows = []
+        checker = CodexUsageChecker()
+        now = datetime.now()
+
+        def get_used_percent(limit_data):
+            try:
+                return float(limit_data.get('used_percent', -1))
+            except (TypeError, ValueError):
+                return -1.0
+
+        def format_limit(limit_data):
+            """格式化速率限制显示"""
+            if not limit_data:
+                return "暂无数据"
+
+            used_percent = limit_data.get('used_percent')
+            if isinstance(used_percent, (int, float)):
+                used_str = f"{used_percent:.1f}%"
+            else:
+                used_str = "未知"
+
+            reset_str = ""
+            resets_in_seconds = limit_data.get('resets_in_seconds')
+            if isinstance(resets_in_seconds, (int, float)):
+                reset_time = now + timedelta(seconds=float(resets_in_seconds))
+                if reset_time.date() == now.date():
+                    reset_str = reset_time.strftime('%H:%M')
+                else:
+                    reset_str = reset_time.strftime('%m/%d %H:%M')
+            else:
+                resets_at = limit_data.get('resets_at')
+                if isinstance(resets_at, (int, float)):
+                    try:
+                        reset_time = datetime.fromtimestamp(float(resets_at))
+                        if reset_time.date() == now.date():
+                            reset_str = reset_time.strftime('%H:%M')
+                        else:
+                            reset_str = reset_time.strftime('%m/%d %H:%M')
+                    except (OverflowError, ValueError):
+                        reset_str = ""
+                elif isinstance(resets_at, str) and resets_at:
+                    reset_str = resets_at
+
+            if reset_str:
+                return f"{used_str} ({reset_str}重置)"
+            return used_str
+
         print("\n📋 已保存的账号配置:")
-        print("-" * 60)
         
         for account_file in sorted(account_files):
             try:
                 with open(account_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                 
-                account_name = account_file.stem
+                account_name = config.get('account_name') or account_file.stem
                 saved_at = config.get('saved_at', '未知时间')
                 account_id = config.get('tokens', {}).get('account_id', '未知ID')
-                
-                print(f"🔹 {account_name}")
-                print(f"   账号ID: {account_id}")
-                print(f"   保存时间: {saved_at}")
-                print()
-                
+
+                email = extract_email_from_auth(config)
+                usage_cache = checker.load_usage_data(email) if email else None
+                rate_limits = usage_cache.get('rate_limits', {}) if usage_cache else {}
+
+                five_hour_limit = None
+                weekly_limit = None
+                for limit in rate_limits.values():
+                    if not isinstance(limit, dict):
+                        continue
+                    window_minutes = limit.get('window_minutes')
+                    if not isinstance(window_minutes, (int, float)):
+                        continue
+                    used_percent = get_used_percent(limit)
+                    if window_minutes <= 330:
+                        if five_hour_limit is None or used_percent > get_used_percent(five_hour_limit):
+                            five_hour_limit = limit
+                    elif window_minutes > 330:
+                        if weekly_limit is None or used_percent > get_used_percent(weekly_limit):
+                            weekly_limit = limit
+
+                five_hour_text = format_limit(five_hour_limit)
+                weekly_text = format_limit(weekly_limit)
+
+                rows.append([
+                    account_name,
+                    account_id,
+                    saved_at,
+                    five_hour_text,
+                    weekly_text
+                ])
+
                 accounts.append(account_name)
                 
             except Exception as e:
                 print(f"❌ 读取 {account_file.name} 失败: {e}")
+
+        if rows:
+            headers = ["账号名称", "账号ID", "保存时间", "5小时窗口", "周限制"]
+            col_widths = [len(h) for h in headers]
+
+            for row in rows:
+                for idx, cell in enumerate(row):
+                    col_widths[idx] = max(col_widths[idx], len(str(cell)))
+
+            header_line = " | ".join(h.ljust(col_widths[idx]) for idx, h in enumerate(headers))
+            separator = "-+-".join("-" * col_widths[idx] for idx in range(len(headers)))
+            print(header_line)
+            print(separator)
+
+            for row in rows:
+                print(" | ".join(str(cell).ljust(col_widths[idx]) for idx, cell in enumerate(row)))
+            print()
         
         return accounts
     

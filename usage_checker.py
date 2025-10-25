@@ -222,23 +222,36 @@ class CodexUsageChecker:
             for key, limit in limits.items():
                 if isinstance(limit, dict):
                     used_percent = limit.get("used_percent", 0)
-                    resets_in_seconds = limit.get("resets_in_seconds", 0)
                     window_minutes = limit.get("window_minutes", 0)
-                    
-                    reset_time = datetime.now() + timedelta(seconds=resets_in_seconds)
                     window_type = "5小时窗口" if window_minutes <= 330 else "周限制"
-                    
-                    # 格式化重置时间 - 如果是今天就只显示时间，否则显示日期+时间
-                    now = datetime.now()
-                    if reset_time.date() == now.date():
-                        reset_str = reset_time.strftime('%H:%M')
+
+                    reset_time = None
+                    reset_str = ""
+                    resets_in_seconds = limit.get("resets_in_seconds")
+                    if isinstance(resets_in_seconds, (int, float)):
+                        reset_time = datetime.now() + timedelta(seconds=float(resets_in_seconds))
                     else:
-                        reset_str = reset_time.strftime('%m/%d %H:%M')
+                        resets_at = limit.get("resets_at")
+                        if isinstance(resets_at, (int, float)):
+                            try:
+                                reset_time = datetime.fromtimestamp(float(resets_at))
+                            except (OverflowError, ValueError):
+                                reset_time = None
+                        elif isinstance(resets_at, str) and resets_at:
+                            reset_str = resets_at
+
+                    # 格式化重置时间 - 如果是今天就只显示时间，否则显示日期+时间
+                    if reset_time:
+                        now = datetime.now()
+                        if reset_time.date() == now.date():
+                            reset_str = reset_time.strftime('%H:%M')
+                        else:
+                            reset_str = reset_time.strftime('%m/%d %H:%M')
                     
                     lines.extend([
                         f"  🔄 {window_type}:",
                         f"    已使用: {used_percent:.1f}%",
-                        f"    重置时间: {reset_str}"
+                        f"    重置时间: {reset_str or '未知'}"
                     ])
         
         return "\n".join(lines)
